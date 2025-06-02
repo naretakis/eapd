@@ -1,0 +1,1 @@
+My philosophy to testing is that test is every ones responsibility not just the tester, and that we should test like an end-user. Instead of just following a set of predetermined steps we should try and replica how an end-user would use it.

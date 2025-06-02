@@ -1,0 +1,20 @@
+sequenceDiagram
+  participant web as Web App
+  participant api as API
+
+  web ->> api: Make request
+  note over web,api: Authorization: Bearer [JWT]<br/>header is present.
+
+  api ->> api: validate JWT
+  note over api,api: The JWT is valid if<br/>the signature is valid<br/>and the JWT is<br/>not expired.
+
+  api ->> api: extract session ID from JWT.
+
+  api ->> db: fetch the session, then the user
+  note over api,db: Finds the session and associated user<br/>
+
+  note over api, web: If user does not match any<br/>sessions, or session expired...
+  api ->> web: HTTP code 401
+
+  note over api, api: If user has an<br/>unexpired session...
+  api ->> api: continues processing request

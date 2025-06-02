@@ -1,0 +1,15 @@
+graph TD
+  web((web user))
+  nginx[nginx web server]
+
+  web --> |HTTP GET, PUT, POST, DELETE :443| nginx
+
+  subgraph EC2 Instance
+    static((frontend<br/>static content))
+    api[Node.js 10<br/<br/>Listening<br/>on :8000]
+    db[PostgreSQL database]
+
+    nginx --> static
+    nginx --> |/api/*|api
+    api --> db
+  end

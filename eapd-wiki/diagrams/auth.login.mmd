@@ -1,0 +1,31 @@
+sequenceDiagram
+  participant web as Web App
+  participant api as API
+
+  web ->> api: Get nonce
+  note over web,api: POST /auth/login/nonce<br/>{ "username": "user's email" }
+
+  api ->> web: Send nonce
+  note over api,web: { "nonce": ...value }<br/>Nonce is a JSON Web Token whose<br/>value is the provided username,<br/>with an expiration 3 seconds after<br/>the nonce was requested, signed <br/>with a secret key using HS256<br/>(symmetric algorithm using an HMAC<br/>and SHA256).
+
+  web ->> api: Request auth token
+  note over web,api: POST /auth/login<br/>{ "username": nonce,<br/>"password": "user's password" }
+
+  api ->> api: validate nonce JWT
+
+  api ->> db: get user
+  note over api,db: Uses the username from the JWT<br/> nonce to fetch a user
+
+  note over api, web: if user does not exist...
+  api ->> web: HTTP code 401
+
+  api ->> api: check that passwords match
+
+  note over api, web: if passwords don't match...
+  api ->> web: HTTP code 401
+
+  note over api, web: if user is authenticated...
+  api ->> api: generate session ID
+  api ->> db: store session ID
+  api ->> web: HTTP code 200
+  note over api, web: { "token": JWT,<br/>"user": { ... } }

@@ -1,0 +1,54 @@
+graph TD
+  web((web user))
+
+  cf[AWS CloudFront]
+  lambda[AWS Lambda<br/><br/>Adds browser<br/>security headers]
+  s3[S3 bucket<br/><br/>static content: <br/>HTML, Javascript,<br/>CSS, images]
+
+  vpc[VPC]
+  subnetWeb[web subnet]
+  subnetApp[app subnet]
+  subnetData[data subnet]
+  subnetDMZ[dmz subnet]
+  subnetTransitive[transitive subnet]
+  subnetManagement[mgmt subnet]
+
+  elb[AWS Elastic Load Balancer<br/><br/>Listen on :443, terminate SSL,<br/>forward to target group<br/><br/>sg: eapd-elb<br/>- :443 from the world]
+  tg[ELB Target Group<br/><br/>traffic port :8000]
+  ec2[EC2 Instance<br/><br/>sg: eapd-api-vpc<br/>- :22 from jump box<br/>- :8000 from ELB]
+  node[Node.js 10<br/><br/>Listening<br/>on :8000]
+  rds["Database (RDS)<br/><br/>sg: eapd-db<br/>- :5432 from EC2"]
+
+  web --> |HTTP GET :443|cf
+  web --> |HTTP GET, PUT, POST, DELETE :443| elb
+  elb --> tg
+
+  subgraph AWS
+    subgraph frontend
+      cf --> s3
+      cf --> lambda
+    end
+    
+    subgraph backend
+      subgraph AWS VPC
+
+        subgraph eAPD API
+          ec2 --> node
+        end
+
+        subnetWeb -.- vpc
+        subnetApp -.- vpc
+        subnetData -.- vpc
+        subnetDMZ -.- vpc
+        subnetTransitive -.- vpc
+        subnetManagement -.- vpc
+
+        ec2 -.- subnetApp
+        elb -.- subnetDMZ
+        rds -.- subnetData
+
+        tg --> ec2
+        node --> rds
+      end
+    end
+  end

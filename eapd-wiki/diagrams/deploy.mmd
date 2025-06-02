@@ -1,0 +1,41 @@
+graph LR
+  prod_gh((Github))
+  prod_ci((CircleCI))
+
+  prod_gh --> |webhook| prod_ci
+
+  prod_ci --> new_tag>new tag]
+  new_tag --> vtag{tag starts with v?}
+  vtag --> |yes| prod((Production))
+
+  prod --> prod_check_docker[Check<br/>docker-compose<br/>image tags]
+  prod --> prod_validate_openapi[Validate<br/>OpenAPI]
+  prod --> prod_validate_yaml[Validate<br/>YAML]
+  prod --> prod_install_deps[Install<br/>dependencies]
+
+  prod_install_deps --> prod_backend_endpoint[Backend endpoint<br/>tests]
+  prod_install_deps --> prod_backend_lint[Backend<br/>lint]
+  prod_install_deps --> prod_backend_unit[Backend unit<br/>tests]
+  prod_install_deps --> prod_backend_vuln[Backend vulnerability<br/>scans]
+  prod_install_deps --> prod_frontend_vuln[Frontend vulnerability<br/>scans]
+  prod_install_deps --> prod_frontend_lint[Frontend<br/>lint]
+  prod_install_deps --> prod_frontend_test[Frontend<br/>tests]
+  prod_validate_yaml --> prod_frontend_test
+  
+  prod_backend_vuln --> prod_store_and((AND))
+  prod_frontend_build --> prod_store_and
+  prod_store_and --> prod_store[Store artifacts]
+
+  prod_backend_endpoint --> prod_backend_and((AND))
+  prod_backend_vuln --> prod_backend_and
+  prod_backend_lint --> prod_backend_and
+  prod_backend_unit --> prod_backend_and
+  prod_store --> prod_backend_and
+  prod_backend_and --> prod_backend_deploy[Deploy backend<br/>to production]
+
+  prod_frontend_vuln --> prod_frontend_and
+  prod_frontend_vuln --> prod_frontend_build[Frontend<br/>build]
+  prod_frontend_lint --> prod_frontend_and
+  prod_frontend_build --> prod_frontend_and((AND))
+  prod_validate_yaml --> prod_frontend_and
+  prod_frontend_and --> prod_frontend_deploy[Deploy frontend<br/>to production]
